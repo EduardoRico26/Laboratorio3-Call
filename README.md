@@ -246,3 +246,280 @@ In more advanced systems such as gRPC, contracts are defined using `.proto` file
 ---
 
 
+# Exercise 3.3 - Room Management via HTTP
+
+## Objective
+
+Transform the previously developed room management system using TCP into a service based on HTTP.
+
+The objective is to understand how a custom communication protocol can be replaced by clearer HTTP routes, allowing clients such as browsers, Postman, or tools like curl to interact with the server.
+
+---
+
+# Theoretical Framework
+
+This exercise uses the HTTP protocol over a client-server architecture.
+
+Unlike the previous TCP-based exercise, where custom messages were sent such as:
+
+```
+RESERVAR_SALON,E303
+```
+
+HTTP defines a structure based on:
+
+* HTTP Method (GET, POST)
+* Resource path
+* Parameters
+
+Example:
+
+```
+GET /rooms?id=E303
+```
+
+The communication is performed through HTTP requests and responses, where the server processes the request and returns a response in plain text or HTML.
+
+---
+
+# Exercise Development
+
+An HTTP server was implemented using Java basic classes:
+
+* `ServerSocket`
+* `Socket`
+* Input and output streams
+
+---
+
+# System Operation
+
+The server maintains the rooms in memory:
+
+```
+E301
+E302
+E303
+E304
+```
+
+Each room can have two states:
+
+```
+AVAILABLE
+RESERVED
+```
+
+---
+
+# Execution Commands
+
+## Compilation
+
+From the project root:
+
+```bash
+javac src/main/java/edu/escuelaing/arsw/ejercicio33/*.java
+```
+
+---
+
+## Running the server
+
+```bash
+java -cp src/main/java edu.escuelaing.arsw.ejercicio33.HttpSalonServer
+```
+
+Expected output:
+
+```
+HTTP Salon Server running...
+```
+
+The server remains waiting for requests.
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/336.png)
+
+---
+
+# Tests Performed
+
+## Query all rooms
+
+Request:
+
+```
+GET /rooms
+```
+
+Example:
+
+```
+http://localhost:35000/rooms
+```
+
+Response:
+
+```
+E301 : AVAILABLE
+E302 : AVAILABLE
+E303 : AVAILABLE
+E304 : AVAILABLE
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/331.png)
+
+---
+
+## Query a specific room
+
+Request:
+
+```
+GET /rooms?id=E303
+```
+
+Example:
+
+```
+http://localhost:35000/rooms?id=E303
+```
+
+Response:
+
+```
+ROOM_AVAILABLE
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/332.png)
+
+---
+
+## Reserve a room
+
+Request:
+
+```
+POST /rooms/reserve?id=E303
+```
+
+Command:
+
+```bash
+curl.exe -X POST "http://localhost:35000/rooms/reserve?id=E303"
+```
+
+Response:
+
+```
+RESERVATION_SUCCESSFUL
+```
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/333.png)
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/334.png)
+
+---
+
+## Release a room
+
+Request:
+
+```
+POST /rooms/release?id=E303
+```
+
+Command:
+
+```bash
+curl.exe -X POST "http://localhost:35000/rooms/release?id=E303"
+```
+
+Response:
+
+```
+RELEASE_SUCCESSFUL
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/335.png)
+
+---
+
+# Analysis
+
+The implementation demonstrates how a client-server system can evolve from a custom text-based protocol into an HTTP-based architecture.
+
+HTTP provides a more organized way to define operations through routes and methods, making the service easier to consume from different clients.
+
+The server keeps the business logic separated from the communication handling, allowing better code organization.
+
+---
+
+# Reflection Questions
+
+## What advantages does HTTP offer compared to a manually defined text protocol?
+
+HTTP provides a standard communication structure that is already supported by multiple clients such as browsers, testing tools, and applications.
+
+Additionally, it clearly separates:
+
+* The action through the HTTP method.
+* The resource through the URL.
+* The parameters through queries.
+
+For example:
+
+```
+POST /rooms/reserve?id=E303
+```
+
+is more descriptive than:
+
+```
+RESERVAR_SALON,E303
+```
+
+It also makes integration with other systems easier.
+
+---
+
+## What limitations does building an HTTP server without a framework have?
+
+Building an HTTP server manually helps understand how communication works, but it has several limitations:
+
+* HTTP requests must be interpreted manually.
+* There are no automatic validations.
+* Error handling becomes more complex.
+* It does not include advanced features such as security, session management, or automatic serialization.
+
+Frameworks such as Spring Boot simplify these tasks and allow the development of more robust services.
+
+---
+
+## How would this solution change if JSON was used instead of HTML?
+
+If JSON was used, responses would contain structured data instead of HTML pages.
+
+Example:
+
+```json
+{
+  "room": "E303",
+  "status": "RESERVED"
+}
+```
+
+This would allow other programs to consume the information easily.
+
+Additionally, JSON facilitates communication between distributed applications because it does not depend on a visual interface.
+
+---
+
+# Conclusions
+
+1. HTTP allows the construction of more flexible and easier-to-consume services than custom protocols.
+2. HTTP methods and routes work as a communication contract between client and server.
+3. Separating business logic from server communication improves system evolution.
+4. Manual implementation allows understanding the internal operation of HTTP.
+5. In real applications, using frameworks and structured formats such as JSON would be recommended.
+
+
