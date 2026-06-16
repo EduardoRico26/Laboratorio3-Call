@@ -1143,4 +1143,421 @@ gRPC is more suitable for modern distributed architectures.
 
 4. gRPC Authors. (2026). *gRPC Documentation.* https://grpc.io/docs/
 
+# Exercise 6.3 - University Wellness Decomposition with gRPC
 
+## Objective
+
+Based on the previous University Wellness appointment system developed with gRPC, an initial microservices architecture was implemented.
+
+The main objective is to separate system responsibilities into independent services that can run and communicate remotely.
+
+---
+
+# Theoretical Framework
+
+A microservices architecture consists of dividing a large application into smaller independent services, where each service has a specific responsibility.
+
+In this exercise, gRPC is used as the communication mechanism between services, using `.proto` files as communication contracts.
+
+Each service exposes remote methods that can be consumed by external clients.
+
+---
+
+# Microservices Design
+
+The solution was divided into the following services:
+
+```
+                 +----------------+
+                 | WellnessClient |
+                 +-------+--------+
+                         |
+          +--------------+--------------+
+          |                             |
+          v                             v
+
++---------------------+       +---------------------+
+| AppointmentService  |       |    MedicalService   |
+|       :50051        |       |       :50052        |
++---------------------+       +---------------------+
+
+Manages appointments       Manages available
+and schedules              medical specialties
+```
+
+---
+
+# Implemented Services
+
+## AppointmentService
+
+Port:
+
+```
+50051
+```
+
+Responsibility:
+
+Manages university wellness appointments.
+
+Available operations:
+
+```proto
+rpc RequestAppointment
+rpc CancelAppointment
+rpc GetAppointments
+```
+
+Managed data:
+
+```
+Appointment
+-------------
+id
+studentId
+serviceType
+date
+status
+```
+
+Possible states:
+
+```
+REQUESTED
+CANCELLED
+ATTENDED
+```
+
+This service stores appointment information in memory.
+
+---
+
+## MedicalService
+
+Port:
+
+```
+50052
+```
+
+Responsibility:
+
+Manages basic information about available medical specialties.
+
+Available operations:
+
+```proto
+rpc GetSpecialty
+rpc GetAllSpecialties
+```
+
+Managed data:
+
+```
+Specialty
+-------------
+id
+type
+name
+description
+availableSlots
+```
+
+Available specialties:
+
+```
+MEDICINE
+PSYCHOLOGY
+DENTISTRY
+```
+
+---
+
+# gRPC Contracts
+
+Two `.proto` files were implemented.
+
+## AppointmentProto
+
+Defines:
+
+```
+AppointmentService
+Student
+Appointment
+AppointmentRequest
+AppointmentResponse
+CancelRequest
+CancelResponse
+```
+
+---
+
+## MedicalProto
+
+Defines:
+
+```
+MedicalService
+Specialty
+SpecialtyRequest
+SpecialtyResponse
+SpecialtyList
+```
+
+The `.proto` files work as communication contracts between client and server, allowing the automatic generation of the required communication classes.
+
+---
+
+# Project Execution
+
+## Compilation
+
+From the project root:
+
+```bash
+mvn clean compile
+```
+
+Expected result:
+
+```
+BUILD SUCCESS
+```
+
+---
+
+# Running the Services
+
+Different terminals must be opened.
+
+---
+
+## Terminal 1 - AppointmentService
+
+Run:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio63.AppointmentServer"
+```
+
+Expected output:
+
+```
+AppointmentService iniciado en puerto 50051
+```
+
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/631.png)
+
+---
+
+## Terminal 2 - MedicalService
+
+Run:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio63.MedicalServer"
+```
+
+Expected output:
+
+```
+MedicalService iniciado en puerto 50052
+```
+
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/632.png)
+
+---
+
+## Terminal 3 - Client
+
+Run:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio63.WellnessClient"
+```
+
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/633.png)
+
+---
+
+# Performed Tests
+
+The client directly consumes both implemented services.
+
+---
+
+## Specialty Query
+
+Request sent to:
+
+```
+MedicalService :50052
+```
+
+Response:
+
+```
+Dentistry | Oral health and dental procedures | Slots: 4
+
+Psychology | Emotional support and mental health | Slots: 6
+
+General Medicine | General consultations and minor emergencies | Slots: 10
+```
+
+---
+
+## Query Specific Specialty
+
+Request:
+
+```
+PSYCHOLOGY
+```
+
+Response:
+
+```
+Psychology - Emotional support and mental health
+Available slots: 6
+```
+
+---
+
+## Appointment Creation
+
+Request sent to:
+
+```
+AppointmentService :50051
+```
+
+Result:
+
+```
+Appointment #1 created.
+
+Appointment #2 created.
+```
+
+Appointments are stored with:
+
+```
+REQUESTED
+```
+
+status.
+
+---
+
+## Active Appointment Query
+
+Student query:
+
+```
+studentId = 1
+```
+
+Response:
+
+```
+Appointment #1 | PSYCHOLOGY | 2026-06-20T10:00 | REQUESTED
+```
+
+---
+
+# Analysis
+
+The solution demonstrates an initial separation of the university wellness system.
+
+Each service has a specific responsibility:
+
+- AppointmentService manages appointment-related logic.
+- MedicalService manages medical information.
+
+Communication is performed using gRPC with contracts defined through protobuf files.
+
+Each service can run independently on a different port.
+
+---
+
+# Reflection Questions
+
+## Why did you decide to separate these services and not others?
+
+The services were separated because they represent different responsibilities inside the system.
+
+Appointments require operations such as:
+
+- Creating requests.
+- Cancelling appointments.
+- Querying schedules.
+
+Medical information only requires managing specialties and availability.
+
+Separating them allows each service to evolve independently.
+
+---
+
+## What data belongs to each service?
+
+### AppointmentService
+
+Manages:
+
+```
+Appointment
+Student
+ServiceType
+AppointmentStatus
+```
+
+Its main responsibility is appointment management.
+
+---
+
+### MedicalService
+
+Manages:
+
+```
+Specialty
+SpecialtyType
+AvailableSlots
+```
+
+Its information is related to available medical services.
+
+---
+
+## What risk appears when the client knows all services?
+
+If the client directly knows every service, the system becomes more coupled.
+
+Possible problems:
+
+- The client must know every port.
+- Internal changes can affect the client.
+- Services lose some independence.
+
+In real architectures, an API Gateway is usually added as a single entry point.
+
+---
+
+# Conclusions
+
+1. Microservices architecture allows large systems to be divided into independent components.
+
+2. gRPC simplifies communication between services through protobuf-defined contracts.
+
+3. Separating responsibilities improves code organization and maintenance.
+
+4. Each service can run independently.
+
+5. A client can consume multiple remote services using different communication channels.
+
+6. A future improvement would be adding more services such as GymService and RecreationService following the same architecture.
