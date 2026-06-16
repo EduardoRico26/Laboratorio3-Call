@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "edu.escuelaing.arsw.ejercicio53";
+option java_package = "edu.escuelaing.arsw.ejercicio63";
 option java_outer_classname = "AppointmentProto";
 
 // ─────────────────────────────────────────────────────────
