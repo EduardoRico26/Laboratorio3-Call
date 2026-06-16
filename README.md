@@ -1561,3 +1561,457 @@ In real architectures, an API Gateway is usually added as a single entry point.
 5. A client can consume multiple remote services using different communication channels.
 
 6. A future improvement would be adding more services such as GymService and RecreationService following the same architecture.
+
+
+
+# Exercise 7.3 - WellnessGateway: University Wellness Gateway
+
+## Objective
+
+Build a Gateway to centralize access to the different services of the university wellness system.
+
+The main objective is to apply the Gateway pattern inside a distributed architecture, where the client does not need to know each internal service directly, but instead communicates with a single entry point that coordinates the operations.
+
+The solution uses the gRPC services previously developed:
+
+- AppointmentService
+- MedicalService
+
+The Gateway abstracts the communication between the client and the internal services.
+
+---
+
+# Theoretical Framework
+
+In a microservices-based architecture, clients usually need to communicate with several independent services.
+
+Without a Gateway, the client would need to know:
+
+- Address of each service.
+- Port used by each service.
+- Available contracts.
+- Communication details.
+
+Example without Gateway:
+
+```
+Client
+
+   |
+   |
+   +----> AppointmentService :50051
+   |
+   +----> MedicalService :50052
+   |
+   +----> GymService
+   |
+   +----> RecreationService
+```
+
+With a Gateway:
+
+```
+             Client
+
+                |
+                |
+
+        WellnessGateway
+
+          /      |       \
+
+         /       |        \
+
+Appointment  Medical   Other Services
+Service      Service
+:50051       :50052
+```
+
+The Gateway acts as an intermediary and provides a simpler interface for the consumer.
+
+---
+
+# Exercise Development
+
+The following class was implemented:
+
+```
+WellnessGateway
+```
+
+This class is responsible for:
+
+- Creating gRPC connections to internal services.
+- Executing combined operations.
+- Hiding communication details between services.
+- Providing a simplified interface to the client.
+
+The services used were:
+
+```
+AppointmentService
+Port: 50051
+
+MedicalService
+Port: 50052
+```
+
+---
+
+# Implemented Operations
+
+## requestAppointment(studentId, serviceType)
+
+Allows requesting an appointment through:
+
+```
+AppointmentService
+```
+
+The Gateway receives the student's information and performs the corresponding gRPC call.
+
+Example:
+
+```
+requestAppointment(
+ student: 1,
+ service: MEDICINE
+)
+```
+
+Response:
+
+```
+[OK] Student 1 | MEDICINE | 2026-06-20T09:00 | Appointment #1 created.
+```
+
+---
+
+## getStudentWellnessSummary(studentId)
+
+This operation combines information from different services.
+
+First, it queries:
+
+```
+AppointmentService
+```
+
+to obtain the student's active appointments.
+
+Then it queries:
+
+```
+MedicalService
+```
+
+to obtain detailed information about specialties.
+
+Example:
+
+```
+Active appointments:
+
+Appointment #1 | General Medicine
+2026-06-20T09:00
+REQUESTED
+
+Appointment #2 | Psychology
+2026-06-22T10:00
+REQUESTED
+```
+
+It also displays:
+
+```
+Available specialties:
+
+Dentistry
+Psychology
+General Medicine
+```
+
+---
+
+## reserveGymSession(studentId, timeSlot)
+
+Simulates the reservation of gym sessions.
+
+Example:
+
+```
+Student 1
+
+Gym session reserved:
+
+Monday 07:00-08:00
+```
+
+The information is temporarily stored in memory.
+
+---
+
+## reserveRecreationResource(studentId, resourceId)
+
+Allows reserving recreational resources.
+
+Available resources:
+
+```
+R01 - Soccer field
+R02 - Ping-pong table
+R03 - Game room
+```
+
+The Gateway verifies if the resource has already been reserved.
+
+Example:
+
+First reservation:
+
+```
+[OK] Student 1
+
+Resource reserved:
+Soccer field (R01)
+```
+
+Second attempt:
+
+```
+[ERROR]
+
+Soccer field is already reserved
+```
+
+
+---
+
+# System Execution
+
+Before running the Gateway, the internal services must be running.
+
+---
+
+## Terminal 1
+
+Run AppointmentService:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio63.AppointmentServer"
+```
+
+Expected output:
+
+```
+AppointmentService started on port 50051
+```
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/731.png)
+
+---
+
+## Terminal 2
+
+Run MedicalService:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio63.MedicalServer"
+```
+
+Expected output:
+
+```
+MedicalService started on port 50052
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/732.png)
+
+---
+
+## Terminal 3
+
+Run Gateway:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio73.WellnessGateway"
+```
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/733.png)
+---
+
+# Tests Performed
+
+## Appointment Request
+
+Output:
+
+```
+--- Operation 1: requestAppointment ---
+
+[OK] Student 1 | MEDICINE | 2026-06-20T09:00 | Appointment #1 created.
+
+[OK] Student 1 | PSYCHOLOGY | 2026-06-22T10:00 | Appointment #2 created.
+
+[OK] Student 2 | DENTISTRY | 2026-06-21T14:00 | Appointment #3 created.
+```
+
+---
+
+## Student Wellness Summary
+
+Output:
+
+```
+--- Operation 2: getStudentWellnessSummary ---
+
+Active appointments:
+
+Appointment #1 | General Medicine | REQUESTED
+
+Appointment #2 | Psychology | REQUESTED
+
+
+Available specialties:
+
+Dentistry
+Psychology
+General Medicine
+```
+
+---
+
+## Gym Reservations
+
+Output:
+
+```
+--- Operation 3: reserveGymSession ---
+
+[OK] Student 1 | Gym reserved:
+
+Monday 07:00-08:00
+
+
+[OK] Student 2 | Gym reserved:
+
+Tuesday 18:00-19:00
+```
+
+---
+
+## Recreation Resource Reservation
+
+Output:
+
+```
+--- Operation 4: reserveRecreationResource ---
+
+[OK] Student 1
+
+Resource reserved:
+Soccer field (R01)
+
+[ERROR]
+
+Soccer field is already reserved
+
+[OK] Student 2
+
+Resource reserved:
+Ping-pong table (R02)
+```
+
+---
+
+# Analysis
+
+The implementation demonstrates how a Gateway can simplify access to a distributed architecture.
+
+The client only knows:
+
+```
+WellnessGateway
+```
+
+and does not need to know:
+
+- Internal ports.
+- Individual services.
+- gRPC communication details.
+
+The Gateway coordinates the calls between services and returns a unified response.
+
+---
+
+# Reflection Questions
+
+## What does the Gateway simplify for the client?
+
+The Gateway simplifies interaction by providing a single access point.
+
+The client does not need to manage multiple connections or know the location of every microservice.
+
+Instead of communicating directly with:
+
+```
+AppointmentService
+MedicalService
+GymService
+RecreationService
+```
+
+it only communicates with:
+
+```
+WellnessGateway
+```
+
+This reduces coupling between the client and the internal architecture.
+
+---
+
+## What complexity does it add to the system?
+
+Although it simplifies the client side, it introduces an additional layer in the architecture.
+
+The Gateway must handle:
+
+- Maintaining connections with internal services.
+- Managing communication errors.
+- Coordinating responses.
+- Transforming information when necessary.
+
+It can also become a critical point if it is not designed properly.
+
+---
+
+## What happens if the Gateway starts containing too much business logic?
+
+If the Gateway starts storing business rules, it loses its main purpose.
+
+Its responsibility should only be:
+
+- Routing.
+- Coordination.
+- Response adaptation.
+
+Business logic should remain inside each microservice.
+
+If the Gateway grows too much, it can become a "distributed monolith", where many responsibilities become concentrated in a single component.
+
+---
+
+# Conclusions
+
+1. A Gateway allows centralized access to multiple microservices.
+
+2. It reduces coupling between clients and internal services.
+
+3. It facilitates operations that require communication with multiple services.
+
+4. Business logic should remain separated inside each service.
+
+5. gRPC provides efficient communication between distributed components.
+
+6. The Gateway improves the client experience by hiding internal architecture details.
+
+7. A proper separation of responsibilities prevents the Gateway from becoming a complex central component.
