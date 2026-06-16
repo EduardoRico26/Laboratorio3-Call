@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.escuelaing.arsw.ejercicio8";
+option java_outer_classname = "CapacityProto";
+
+service CapacityService {
+  rpc GetCapacityStatus (CapacityRequest)  returns (CapacityResponse);
+  rpc RegisterEntry     (EntryRequest)     returns (EntryResponse);
+}
+
+message CapacityRequest {
+  string activity_id = 1;
+}
+
+message CapacityResponse {
+  string activity_id  = 1;
+  int32  max_capacity = 2;
+  int32  current      = 3;
+  bool   available    = 4;
+}
+
+message EntryRequest {
+  string activity_id  = 1;
+  string attendee_id  = 2;
+}
+
+message EntryResponse {
+  bool   success = 1;
+  string message = 2;
+}

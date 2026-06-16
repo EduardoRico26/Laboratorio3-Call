@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.escuelaing.arsw.ejercicio8";
+option java_outer_classname = "WorkshopProto";
+
+service WorkshopService {
+  rpc GetWorkshops     (EmptyWorkshopRequest)  returns (WorkshopList);
+  rpc ReserveSpot      (ReserveSpotRequest)    returns (ReserveSpotResponse);
+  rpc CancelReservation(CancelSpotRequest)     returns (CancelSpotResponse);
+}
+
+message EmptyWorkshopRequest {}
+
+message ReserveSpotRequest {
+  string attendee_id  = 1;
+  string workshop_id  = 2;
+}
+
+message CancelSpotRequest {
+  string attendee_id  = 1;
+  string workshop_id  = 2;
+}
+
+message Workshop {
+  string workshop_id  = 1;
+  string title        = 2;
+  string instructor   = 3;
+  string time_slot    = 4;
+  int32  capacity     = 5;
+  int32  reserved     = 6;
+}
+
+message WorkshopList {
+  repeated Workshop workshops = 1;
+}
+
+message ReserveSpotResponse {
+  bool   success = 1;
+  string message = 2;
+}
+
+message CancelSpotResponse {
+  bool   success = 1;
+  string message = 2;
+}

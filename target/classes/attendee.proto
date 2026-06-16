@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.escuelaing.arsw.ejercicio8";
+option java_outer_classname = "AttendeeProto";
+
+service AttendeeService {
+  rpc RegisterAttendee (RegisterRequest)  returns (RegisterResponse);
+  rpc GetAttendee      (AttendeeRequest)  returns (AttendeeResponse);
+}
+
+message RegisterRequest {
+  string name  = 1;
+  string email = 2;
+  string type  = 3; // STUDENT, PROFESSOR, EXTERNAL
+}
+
+message RegisterResponse {
+  string attendee_id = 1;
+  bool   success     = 2;
+  string message     = 3;
+}
+
+message AttendeeRequest {
+  string attendee_id = 1;
+}
+
+message AttendeeResponse {
+  bool   found       = 1;
+  string attendee_id = 2;
+  string name        = 3;
+  string email       = 4;
+  string type        = 5;
+  string message     = 6;
+}

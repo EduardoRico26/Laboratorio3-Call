@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.escuelaing.arsw.ejercicio8";
+option java_outer_classname = "AgendaProto";
+
+service AgendaService {
+  rpc GetFullAgenda        (EmptyAgendaRequest) returns (ActivityList);
+  rpc GetActivitiesBySlot  (TimeSlotRequest)    returns (ActivityList);
+}
+
+message EmptyAgendaRequest {}
+
+message TimeSlotRequest {
+  string time_slot = 1; // ej: "09:00", "11:00"
+}
+
+message Activity {
+  string activity_id = 1;
+  string title       = 2;
+  string speaker     = 3;
+  string time_slot   = 4;
+  string location    = 5;
+  string type        = 6; // TALK, WORKSHOP, EXPERIENCE
+}
+
+message ActivityList {
+  repeated Activity activities = 1;
+}
