@@ -837,4 +837,310 @@ would be more appropriate because they support communication between different l
 
 ---
 
+# Exercise 5.3 - University Welfare System with gRPC
+
+## Objective
+
+Design and implement a gRPC service for managing university welfare appointment requests.
+
+The objective of this exercise is to understand how to model a communication contract using Protocol Buffers and implement a distributed client-server system based on gRPC instead of manually defined text protocols.
+
+The system allows students to request, cancel, and consult welfare appointments.
+
+---
+
+# Theoretical Framework
+
+gRPC is a modern remote procedure call framework that allows communication between distributed applications.
+
+Unlike previous approaches such as TCP and HTTP, where the communication structure was manually defined, gRPC uses a contract file (`.proto`) that describes:
+
+* Available services.
+* Remote methods.
+* Request messages.
+* Response messages.
+* Data structures.
+
+The communication contract is defined using Protocol Buffers, which automatically generates the necessary classes for the client and server.
+
+Example:
+
+```proto
+service AppointmentService {
+
+  rpc RequestAppointment (AppointmentRequest)
+      returns (AppointmentResponse);
+
+  rpc CancelAppointment (CancelRequest)
+      returns (CancelResponse);
+
+  rpc GetAppointments (StudentRequest)
+      returns (AppointmentList);
+}
+```
+
+This allows different applications to communicate using strongly typed messages.
+
+---
+
+# Exercise Development
+
+A gRPC service was implemented for the University Welfare System.
+
+The project contains:
+
+* A `.proto` file defining the communication contract.
+* A gRPC server.
+* A gRPC client.
+* An in-memory data management system.
+
+The generated classes are created automatically by Maven during compilation.
+
+---
+
+# System Description
+
+The system manages university welfare appointments.
+
+The available services are:
+
+```
+MEDICINE
+PSYCHOLOGY
+DENTISTRY
+```
+
+Each appointment contains:
+
+```
+id
+studentId
+serviceType
+date
+status
+```
+
+The possible appointment states are:
+
+```
+REQUESTED
+CANCELLED
+ATTENDED
+```
+
+---
+
+# Implemented Operations
+
+## RequestAppointment
+
+Allows a student to request a new appointment.
+
+Rules applied:
+
+* The student must exist.
+* The date cannot be empty.
+* New appointments start with status:
+
+```
+REQUESTED
+```
+
+Example response:
+
+```
+Appointment created successfully
+```
+
+---
+
+## CancelAppointment
+
+Allows canceling an existing appointment.
+
+Validations:
+
+* The appointment must exist.
+* The student must own the appointment.
+* The appointment cannot already be cancelled.
+
+After cancellation the state changes to:
+
+```
+CANCELLED
+```
+
+Cancelled appointments are not returned as active.
+
+---
+
+## GetAppointments
+
+Allows consulting active appointments from a student.
+
+Only appointments that are not cancelled are returned.
+
+Example:
+
+```
+Appointment #1
+Service: MEDICINE
+Date: 2026-06-20T09:00
+Status: REQUESTED
+```
+
+---
+
+# Execution Commands
+
+## Compile the project
+
+From the project root:
+
+```bash
+mvn clean compile
+```
+
+This command:
+
+* Downloads dependencies.
+* Generates gRPC classes.
+* Compiles the project.
+
+---
+
+# Run Server
+
+Execute:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio53.AppointmentGrpcServer"
+```
+
+Expected output:
+
+```
+=================================================
+  University Welfare - gRPC Server
+  Listening on port 50052
+=================================================
+```
+
+The server remains waiting for client requests.
+
+---
+
+# Run Client
+
+Open another terminal and execute:
+
+```bash
+mvn exec:java "-Dexec.mainClass=edu.escuelaing.arsw.ejercicio53.AppointmentGrpcClient"
+```
+
+The client performs:
+
+1. Appointment requests.
+2. Appointment queries.
+3. Appointment cancellation.
+4. Verification after cancellation.
+
+---
+
+# Evidence
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/531.png)
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/532.png)
+
+---
+
+# Analysis
+
+The implementation demonstrates how gRPC simplifies communication between distributed applications.
+
+Compared with previous implementations using TCP and HTTP, gRPC provides:
+
+* A predefined communication contract.
+* Automatic message serialization.
+* Generated client and server code.
+* Strong typing.
+
+The business logic remains separated from the communication layer, improving the organization and maintainability of the system.
+
+---
+
+# Reflection Questions
+
+## Why is the `.proto` file considered a communication contract?
+
+The `.proto` file defines the exact structure of the communication between client and server.
+
+It specifies:
+
+* Available operations.
+* Required parameters.
+* Response formats.
+* Data types.
+
+Both client and server depend on this definition, which guarantees that both sides understand how to communicate.
+
+---
+
+## How easy would it be to create a client in another language?
+
+It would be relatively easy because gRPC supports multiple programming languages.
+
+A client could be generated in languages such as:
+
+* Java
+* Python
+* Go
+* C#
+* JavaScript
+
+The `.proto` file is shared, and each language generates its own client classes automatically.
+
+---
+
+## What differences are found between RMI and gRPC?
+
+RMI is Java-specific and allows remote invocation between Java applications.
+
+gRPC is language-independent and uses Protocol Buffers for communication.
+
+Main differences:
+
+| RMI                       | gRPC                             |
+| ------------------------- | -------------------------------- |
+| Only Java                 | Multiple languages               |
+| Uses Java objects         | Uses serialized messages         |
+| Requires Java environment | Uses generated clients           |
+| Tightly coupled to JVM    | Designed for distributed systems |
+
+gRPC is more suitable for modern distributed architectures.
+
+---
+
+# Conclusions
+
+1. gRPC provides a structured way to build distributed applications.
+2. The `.proto` file works as a formal communication contract.
+3. Protocol Buffers simplify message exchange between systems.
+4. The generated code reduces manual implementation errors.
+5. gRPC allows interoperability between different programming languages.
+6. Compared with RMI, gRPC provides a more flexible solution for modern distributed applications.
+
+---
+
+# Bibliography
+
+1. Benavides, L. D., & Gualtero, R. H. (2026). *Introducción a esquemas de nombres, redes, clientes y servicios con Java* [Laboratory Guide]. Escuela Colombiana de Ingeniería Julio Garavito.
+
+2. Benavides, L. D. (2026). *Connectors and Components (C&C) – Call and Return Styles* [Class Presentation]. Escuela Colombiana de Ingeniería Julio Garavito.
+
+3. OpenAI. (2026). *ChatGPT (GPT-5.5 version) [Large Language Model].* https://chatgpt.com/
+
+4. gRPC Authors. (2026). *gRPC Documentation.* https://grpc.io/docs/
+
 
