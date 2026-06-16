@@ -522,4 +522,319 @@ Additionally, JSON facilitates communication between distributed applications be
 4. Manual implementation allows understanding the internal operation of HTTP.
 5. In real applications, using frameworks and structured formats such as JSON would be recommended.
 
+# Exercise 4.3 - Laboratory Inventory using RMI
+
+## Objective
+
+Implement a distributed system using **RMI (Remote Method Invocation)** to manage a laboratory equipment inventory.
+
+The objective is to design a remote interface that allows a client to query, reserve, and release equipment located on a remote server, avoiding the use of text-based communication protocols.
+
+---
+
+# Theoretical Framework
+
+RMI (Remote Method Invocation) is a Java technology that allows invoking methods from an object running in another machine or process.
+
+Unlike previous exercises where custom protocols were implemented using TCP or HTTP routes, in RMI the client works with a remote interface and invokes methods as if the object were locally available.
+
+The communication contract is defined through an interface that extends:
+
+```java id="7z6n4k"
+java.rmi.Remote
+```
+
+and its methods must declare:
+
+```java id="m4w4l2"
+throws RemoteException
+```
+
+The architecture used is:
+
+```id="sxh0s9"
+RMI Client
+      |
+      |
+Remote Interface
+      |
+      |
+Remote Object
+      |
+      |
+Server
+```
+
+---
+
+# Exercise Development
+
+A laboratory inventory system was implemented using RMI.
+
+---
+
+# System Operation
+
+The server maintains the available equipment in memory:
+
+```id="8n8t9d"
+EQ01 - Oscilloscope - Electronics Lab
+EQ02 - Multimeter - Electronics Lab
+EQ03 - Arduino - Systems Lab
+```
+
+Each equipment item contains:
+
+* Equipment code
+* Equipment name
+* Laboratory
+* Status
+
+Possible states:
+
+```id="5e8b7t"
+AVAILABLE
+RESERVED
+```
+
+---
+
+# Remote Interface
+
+The communication contract was defined through the remote interface:
+
+```java id="8m0wha"
+InventarioRemote
+```
+
+Available methods:
+
+```java id="79txjd"
+List<String> consultarEquipos()
+
+String consultarEquipo(String codigo)
+
+boolean reservarEquipo(String codigo)
+
+boolean liberarEquipo(String codigo)
+```
+
+These methods can be invoked remotely by the client.
+
+---
+
+# Execution Commands
+
+## Compilation
+
+From the project root:
+
+```bash id="y7zj25"
+javac src/main/java/edu/escuelaing/arsw/ejercicio43/*.java
+```
+
+---
+
+## Run RMI Server
+
+In a first terminal:
+
+```bash id="yq5r6p"
+java -cp src/main/java edu.escuelaing.arsw.ejercicio43.InventarioServer
+```
+
+Expected output:
+
+```id="m0h0i2"
+RMI Inventory Server running...
+```
+
+The server remains published waiting for client connections.
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/431.png)
+
+---
+
+## Run RMI Client
+
+In a second terminal:
+
+```bash id="o3z6gx"
+java -cp src/main/java edu.escuelaing.arsw.ejercicio43.InventarioClient
+```
+
+
+---
+
+# Tests Performed
+
+## Query all equipment
+
+Request:
+
+```id="k19xqf"
+consultarEquipos()
+```
+
+Response:
+
+```id="n5x7tw"
+EQ01 - Oscilloscope - Electronics Lab - AVAILABLE
+
+EQ02 - Multimeter - Electronics Lab - AVAILABLE
+
+EQ03 - Arduino - Systems Lab - AVAILABLE
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/432.png)
+
+---
+
+## Query specific equipment
+
+Request:
+
+```id="qj3j8s"
+consultarEquipo("EQ01")
+```
+
+Response:
+
+```id="k3z8fa"
+EQ01 - Oscilloscope - Electronics Lab - AVAILABLE
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/433.png)
+
+---
+
+## Reserve equipment
+
+Request:
+
+```id="qg6v8b"
+reservarEquipo("EQ01")
+```
+
+Response:
+
+```id="2a8m3d"
+true
+```
+
+After reservation:
+
+```id="9w7d4x"
+EQ01 - Oscilloscope - Electronics Lab - RESERVED
+```
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/434.png)
+
+![alt text](src/main/java/edu/escuelaing/arsw/imagenes/435.png)
+
+---
+
+## Release equipment
+
+Request:
+
+```id="3v0k8m"
+liberarEquipo("EQ01")
+```
+
+Response:
+
+```id="5q8w4m"
+true
+```
+
+Final state:
+
+```id="4c5x9r"
+EQ01 - Oscilloscope - Electronics Lab - AVAILABLE
+```
+
+---
+
+# Analysis
+
+The implementation demonstrates the difference between message-based communication and object-oriented communication.
+
+With RMI, the client does not need to know how the server logic is implemented. It only needs to know the remote interface.
+
+This allows a more organized design, where the communication contract is defined through Java methods.
+
+Synchronization was also applied to reservation and release operations to prevent inconsistencies when multiple clients try to modify the same equipment simultaneously.
+
+---
+
+# Reflection Questions
+
+## What changed when moving from HTTP to RMI?
+
+The main change is the communication model.
+
+In HTTP, the client sends requests using routes:
+
+```id="q9r8vp"
+POST /rooms/reserve?id=E303
+```
+
+and the server manually interprets these requests.
+
+In RMI, the client directly invokes methods from a remote object:
+
+```java id="x8k4q2"
+reservarEquipo("EQ01")
+```
+
+This makes communication closer to the object-oriented programming paradigm.
+
+---
+
+## Where is the communication contract defined?
+
+The contract is defined in the remote interface:
+
+```java id="7m8c2x"
+InventarioRemote
+```
+
+This interface specifies the available methods and their parameters.
+
+Unlike previous exercises where the contract was based on text conventions, here there is a formal definition in code.
+
+---
+
+## What problems would this system have if a client was not written in Java?
+
+RMI is mainly designed for Java applications.
+
+A client developed in another programming language would have difficulties because it needs to understand:
+
+* The remote interface.
+* Java serialization.
+* The internal RMI communication protocol.
+
+For heterogeneous systems, technologies such as:
+
+* REST
+* HTTP
+* JSON
+* gRPC
+
+would be more appropriate because they support communication between different languages.
+
+---
+
+# Conclusions
+
+1. RMI allows the construction of distributed systems using remote object invocation.
+2. The remote interface works as a formal contract between client and server.
+3. Compared with HTTP, RMI reduces the need to manually interpret messages.
+4. Shared state management requires synchronization to avoid concurrency problems.
+5. For systems involving different technologies, standard protocols such as REST or JSON are usually more suitable.
+
+---
+
 
